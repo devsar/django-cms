@@ -4,6 +4,7 @@ from cms.appresolver import get_app_urls
 from cms.utils import get_template_from_request, get_language_from_request
 from cms.utils.i18n import get_fallback_languages
 from cms.utils.page_resolver import get_page_from_request
+import re
 from django.conf import settings
 from django.conf.urls.defaults import patterns
 from django.core.urlresolvers import resolve, Resolver404
@@ -12,6 +13,9 @@ from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 from django.utils.http import urlquote
+
+#!! Agregado para sacar el dominio y otras conf de los subdominios y localizacion
+from django.conf import settings
 
 def _handle_no_page(request, slug):
     if not slug and settings.DEBUG:
@@ -47,11 +51,20 @@ def details(request, slug):
             for alt_lang in get_fallback_languages(current_language):
                 if alt_lang in available_languages:
                     alt_url = page.get_absolute_url(language=alt_lang, fallback=True)
-                    path = '/%s%s' % (alt_lang, alt_url)
+
+
                     # In the case where the page is not available in the
                     # preferred language, *redirect* to the fallback page. This
                     # is a design decision (instead of rendering in place)).
-                    return HttpResponseRedirect(path)
+
+                    #TODO apartir de un lenguaje puedo obtener varios subdominios
+                    subdomain=settings.SUBDOM_ASSOC_INV.get(alt_lang)
+
+                    #si hay puerto definido le agrego los 2 puntos
+
+                    return HttpResponseRedirect('http://'+subdomain+"."+settings.DOMAIN+alt_url)
+
+
         # There is a page object we can't find a proper language to render it 
         _handle_no_page(request, slug)
 
@@ -76,20 +89,15 @@ def details(request, slug):
                 pass
 
     # Check if the page has a redirect url defined for this language. 
+
+    #!! esta redireccion analiza si la url tiene la forma de /en/loquesea /es/loquesea
     redirect_url = page.get_redirect(language=current_language)
     if redirect_url:
         if (settings.i18n_installed and redirect_url[0] == "/"
             and not redirect_url.startswith('/%s/' % current_language)):
-            # add language prefix to url
             redirect_url = "/%s/%s" % (current_language, redirect_url.lstrip("/"))
-        # prevent redirect to self
-        own_urls = [
-            'http%s://%s%s' % ('s' if request.is_secure() else '', request.get_host(), request.path),
-            '/%s%s' % (current_language, request.path),
-            request.path,
-        ]
-        if redirect_url not in own_urls:
-            return HttpResponseRedirect(redirect_url)
+        # add language prefix to url
+        return HttpResponseRedirect(redirect_url)
     
     # permission checks
     if page.login_required and not request.user.is_authenticated():
