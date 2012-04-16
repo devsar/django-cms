@@ -58,7 +58,7 @@ def details(request, slug):
                     # is a design decision (instead of rendering in place)).
 
                     #TODO apartir de un lenguaje puedo obtener varios subdominios
-                    subdomain=settings.SUBDOM_ASSOC_INV.get(alt_lang)
+                    subdomain=settings.SUBDOM_ASSOC_INV.get(alt_lang,settings.CMS_LANG_DEFAULT)
 
                     #si hay puerto definido le agrego los 2 puntos
 

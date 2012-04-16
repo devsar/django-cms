@@ -19,7 +19,7 @@ def has_lang_prefix(path):
         return False
 
 def patch_response(content, pages_root, language):
-    print "tratando de cambiar las url"
+    print "tratando de cambiar las url" , content
     return content
     # Customarily user pages are served from http://the.server.com/~username/
     # When a user uses django-cms for his pages, the '~' of the url appears quoted in href links.
@@ -169,7 +169,8 @@ class MultilingualURLMiddleware(object):
                not location.startswith(settings.MEDIA_URL) and\
                not (getattr(settings,'STATIC_URL', False) and location.startswith(settings.STATIC_URL)) and\
                not location.startswith(settings.ADMIN_MEDIA_PREFIX):
-                response['Location'] = "/%s%s" % (language, location)
+                #patched REDIRECTS
+                response['Location'] = "%s" % ( location, )
 
         response.set_cookie("django_language", language)
         return response
