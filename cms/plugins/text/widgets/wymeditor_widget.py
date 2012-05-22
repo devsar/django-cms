@@ -9,7 +9,8 @@ from django.utils.translation.trans_real import get_language
 
 class WYMEditor(Textarea):
     class Media:
-        js = [cms_static_url(path) for path in (
+       # js = [cms_static_url(path) for path in (
+	js = ["%s%s" % (settings.STATIC_OUT_S3_URL, path) for path in (
             'wymeditor/jquery.wymeditor.js',
             'wymeditor/plugins/resizable/jquery.wymeditor.resizable.js',
             'js/wymeditor.placeholdereditor.js',
